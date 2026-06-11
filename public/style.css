@@ -53,11 +53,90 @@ html, body {
 
 #score-text { margin-left: auto; }
 
-#game-canvas {
+#game-area {
   flex: 1;
-  width: 100%;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+}
+
+#game-canvas {
+  flex: 1 1 auto;
+  min-width: 0;
   display: block;
   background: linear-gradient(180deg, #16213e 0%, #0f3460 100%);
+}
+
+#preview-queue {
+  flex: 0 0 180px;
+  width: 180px;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-left: 2px solid rgba(74, 111, 165, 0.5);
+}
+
+.preview-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #f5c542;
+  text-align: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(245, 197, 66, 0.3);
+}
+
+.preview-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.preview-card {
+  background: linear-gradient(135deg, #1a3a5c, #0f2b4a);
+  border: 2px solid #4a6fa5;
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s ease;
+}
+
+.preview-card.active {
+  border-color: #f5c542;
+  box-shadow: 0 0 15px rgba(245, 197, 66, 0.4);
+}
+
+.preview-num {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #4a6fa5;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.preview-card.active .preview-num {
+  background: #f5c542;
+  color: #1a1a2e;
+}
+
+.preview-expr {
+  font-size: 18px;
+  font-weight: 700;
+  color: #eee;
+  letter-spacing: 1px;
+}
+
+.preview-card.active .preview-expr {
+  color: #f5c542;
 }
 
 #question-area {

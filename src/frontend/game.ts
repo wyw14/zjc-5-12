@@ -9,6 +9,7 @@ const canvas = document.getElementById('game-canvas') as HTMLCanvasElement;
 const ctx = canvas.getContext('2d')!;
 const questionText = document.getElementById('question-text')!;
 const optionBtns = document.querySelectorAll('.option-btn') as NodeListOf<HTMLButtonElement>;
+const previewCards = document.querySelectorAll('.preview-card') as NodeListOf<HTMLDivElement>;
 const hpBar = document.getElementById('hp-bar')!;
 const hpText = document.getElementById('hp-text')!;
 const scoreText = document.getElementById('score-text')!;
@@ -324,6 +325,23 @@ function updateHUD() {
   progressText.textContent = `${currentIndex} / ${questions.length}`;
 }
 
+function updatePreviewQueue() {
+  previewCards.forEach((card, i) => {
+    const questionIdx = currentIndex + 1 + i;
+    const exprEl = card.querySelector('.preview-expr') as HTMLDivElement;
+    const numEl = card.querySelector('.preview-num') as HTMLDivElement;
+    
+    if (questionIdx < questions.length) {
+      exprEl.textContent = questions[questionIdx].expression + ' = ?';
+      numEl.textContent = String(i + 1);
+      card.style.display = 'flex';
+      card.classList.remove('active');
+    } else {
+      card.style.display = 'none';
+    }
+  });
+}
+
 function showQuestion() {
   if (currentIndex >= questions.length) {
     endGame();
@@ -345,6 +363,8 @@ function showQuestion() {
   monster.dying = false;
   monster.deathTimer = 0;
   monster.hitFlash = 0;
+
+  updatePreviewQueue();
 
   isLocked = false;
 }

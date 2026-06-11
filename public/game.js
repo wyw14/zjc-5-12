@@ -3,6 +3,7 @@ const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
 const questionText = document.getElementById('question-text');
 const optionBtns = document.querySelectorAll('.option-btn');
+const previewCards = document.querySelectorAll('.preview-card');
 const hpBar = document.getElementById('hp-bar');
 const hpText = document.getElementById('hp-text');
 const scoreText = document.getElementById('score-text');
@@ -11,16 +12,12 @@ const overlay = document.getElementById('overlay');
 const overlayTitle = document.getElementById('overlay-title');
 const overlayMsg = document.getElementById('overlay-msg');
 const startBtn = document.getElementById('start-btn');
-const previewCards = document.querySelectorAll('.preview-card');
 const MAX_HP = 5;
-const PREVIEW_COUNT = 3;
 let hp = MAX_HP;
 let score = 0;
 let currentIndex = 0;
-let totalQuestions = 0;
 let questions = [];
 let isLocked = false;
-let sessionId = '';
 let particles = [];
 let warrior;
 let monster;
@@ -273,42 +270,29 @@ function updateHUD() {
     hpBar.style.width = pct + '%';
     hpText.textContent = `❤️ ${hp} / ${MAX_HP}`;
     scoreText.textContent = `🏆 ${score}`;
-    progressText.textContent = `${currentIndex} / ${totalQuestions}`;
+    progressText.textContent = `${currentIndex} / ${questions.length}`;
 }
 function updatePreviewQueue() {
     previewCards.forEach((card, i) => {
         const questionIdx = currentIndex + 1 + i;
-        const labelEl = card.querySelector('.preview-label');
-        const exprEl = card.querySelector('.preview-expression');
+        const exprEl = card.querySelector('.preview-expr');
+        const numEl = card.querySelector('.preview-num');
         if (questionIdx < questions.length) {
-            const q = questions[questionIdx];
-            card.classList.remove('empty');
-            labelEl.textContent = `第 ${questionIdx + 1} 题`;
-            exprEl.textContent = q.expression;
+            exprEl.textContent = questions[questionIdx].expression + ' = ?';
+            numEl.textContent = String(i + 1);
+            card.style.display = 'flex';
+            card.classList.remove('active');
         }
         else {
-            card.classList.add('empty');
-            labelEl.textContent = `第 ${questionIdx + 1} 题`;
-            exprEl.textContent = '— — —';
+            card.style.display = 'none';
         }
     });
 }
 function showQuestion() {
-    if (currentIndex >= totalQuestions) {
+    if (currentIndex >= questions.length) {
         endGame();
         return;
     }
-    const lastPreviewIdx = currentIndex + PREVIEW_COUNT;
-    const needFetch = currentIndex >= questions.length || lastPreviewIdx >= questions.length;
-    if (needFetch && questions.length < totalQuestions) {
-        fetchMoreQuestions().then(() => {
-            doShowQuestion();
-        });
-        return;
-    }
-    doShowQuestion();
-}
-function doShowQuestion() {
     const q = questions[currentIndex];
     questionText.textContent = q.expression + ' = ?';
     optionBtns.forEach((btn, i) => {
@@ -330,39 +314,17 @@ async function fetchQuestions() {
     const data = await res.json();
     return data.questions;
 }
-async function fetchQuestionBatch(start, count) {
-    const res = await fetch(`/api/questions/batch?sessionId=${sessionId}&start=${start}&count=${count}`);
-    const data = await res.json();
-    return {
-        total: data.total,
-        batch: data.batch,
-    };
-}
-async function fetchMoreQuestions() {
-    const needCount = PREVIEW_COUNT + 1;
-    const start = questions.length;
-    const { total, batch } = await fetchQuestionBatch(start, needCount);
-    totalQuestions = total;
-    questions.push(...batch);
-}
-function generateSessionId() {
-    return 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-}
 async function startGame() {
     overlay.classList.add('hidden');
     hp = MAX_HP;
     score = 0;
     currentIndex = 0;
-    questions = [];
     particles = [];
     damageFlash = 0;
-    sessionId = generateSessionId();
     initPositions();
     updateHUD();
     try {
-        const { total, batch } = await fetchQuestionBatch(0, PREVIEW_COUNT + 1);
-        totalQuestions = total;
-        questions = batch;
+        questions = await fetchQuestions();
     }
     catch {
         overlay.classList.remove('hidden');
@@ -382,12 +344,12 @@ function endGame() {
     }
     else {
         overlayTitle.textContent = '🎉 通关！';
-        overlayMsg.textContent = `全部 ${totalQuestions} 题完成！得分：${score}`;
+        overlayMsg.textContent = `全部 ${questions.length} 题完成！得分：${score}`;
     }
     startBtn.textContent = '再来一局';
 }
 function handleAnswer(idx) {
-    if (isLocked || currentIndex >= totalQuestions)
+    if (isLocked || currentIndex >= questions.length)
         return;
     isLocked = true;
     const q = questions[currentIndex];
